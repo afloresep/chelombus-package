@@ -89,6 +89,32 @@ run-clustering --input-dir pca_results/ --output-dir clusters/
 
 ## **4. Usage**
 
+### Loading Data
+Chelombus uses `DataHanlder.load_data` method for this. This function returns a generator object that will work with all file types supported (txt, csv, cxsmiles). 
+
+All methods assume that the `smiles` values are on the first column and that the input data contains a header. Just as with pandas you can change this by updating `header=None` or `smiles_col_index=1` when creating a instance of the class for no header and smiles on column 1. This way only the smiles from the data is loaded to ensure speed and memory efficiency.  
+
+#### Example Usage
+Suppose your file looks like this (`input.txt`):
+
+```
+ID   SMILES           Property
+1    CCCCCCCC         10.5
+2    CCC=O            8.2
+3    C1=CC=CC=C1      15.8
+```
+
+- If `smiles_col_index = 1` (zero-based index for SMILES):
+  - `usecols=[1]` restricts the DataFrame to only the SMILES column.
+  - Output for a chunk might look like:
+    ```python
+    ['CCCCCCCC', 'CCC=O', 'C1=CC=CC=C1']
+    ```
+
+Another example, if our `input.txt` has no header and our smiles values are on column 3, we'll do:
+
+ `data_handler = Chelombus.DataHanlder(file_path = 'my_path', chunksize=1e7,header=None, smiles_col_index=2)`
+
 ### **Command-Line Interface (CLI)**
 
 The package provides CLI tools for key functionalities:
