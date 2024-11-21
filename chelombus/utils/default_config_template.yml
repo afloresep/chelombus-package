@@ -1,0 +1,6 @@
+# Tempalte for a configuration file for users to copy and modify. This will overwrite the defualt config.py file when passed in CLI 
+chunksize: 10_000_000
+fingerprint_type: mqn 
+fp_size: 1024
+n_components: 3
+bin_sizes: [50, 50, 50]
