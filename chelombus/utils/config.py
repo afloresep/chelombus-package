@@ -5,19 +5,18 @@ import os
 # =======================
 
 # Base directory of the project (default: directory where the script is run)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.getcwd() # Use cwd as base 
 
 # =======================
 # File Paths
 # =======================
-DATA_FILE_PATH = os.path.join(BASE_DIR, 'data', 'default_data.cxsmiles')  # Input file path
-OUTPUT_FILE_PATH = os.path.join(BASE_DIR, 'data', 'default_output/')  # Default output directory
+DATA_PATH= os.path.join(BASE_DIR, 'data', 'default_data.cxsmiles')  # Input file path
+OUTPUT_PATH= os.path.join(BASE_DIR, 'data', 'default_output/')  # Default output directory
 
 # Cluster data paths
-CLUSTER_DATA_PATH = os.path.join(OUTPUT_FILE_PATH, 'clustered_output/')
-INPUT_TMAP_PATH = os.path.join(OUTPUT_FILE_PATH, 'cluster_representatives.csv')
-OUTPUT_TMAP_PATH = os.path.join(OUTPUT_FILE_PATH, 'maps/')
+CLUSTER_DATA_PATH = os.path.join(OUTPUT_PATH, 'clustered_output/')
+INPUT_TMAP_PATH = os.path.join(OUTPUT_PATH, 'cluster_representatives.csv')
+OUTPUT_TMAP_PATH = os.path.join(OUTPUT_PATH, 'maps/')
 
 # Logging paths
 LOG_FILE_PATH = os.path.join(BASE_DIR, 'logs', 'app.log')
@@ -31,7 +30,7 @@ CHUNKSIZE = 10_000_000  # Number of rows per chunk
 # PCA Parameters
 # =======================
 PCA_N_COMPONENTS = 3  # Number of PCA dimensions
-STEPS_LIST = [64, 32, 16]  # Steps for dividing each PCA dimension
+BINS = [50, 50, 50]  # Number of bins on each pca dimension 
 
 # =======================
 # Parallel Processing

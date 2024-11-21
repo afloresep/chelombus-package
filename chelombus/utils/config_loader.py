@@ -9,11 +9,11 @@ def load_config(user_config_path=None):
     # Start with the default config
     config = {
         "BASE_DIR": BASE_DIR,
-        "DATA_FILE_PATH": DATA_FILE_PATH,
-        "OUTPUT_FILE_PATH": OUTPUT_FILE_PATH,
+        "DATA_FILE_PATH": DATA_PATH,
+        "OUTPUT_FILE_PATH": OUTPUT_PATH,
         "CHUNKSIZE": CHUNKSIZE,
         "PCA_N_COMPONENTS": PCA_N_COMPONENTS,
-        "STEPS_LIST": STEPS_LIST,
+        "STEPS_LIST": BINS,
         "N_JOBS": N_JOBS,
         "RANDOM_STATE": RANDOM_STATE,
         "TMAP_NAME": TMAP_NAME,
