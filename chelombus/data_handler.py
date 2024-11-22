@@ -4,19 +4,8 @@ import os
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from utils.helper_functions import find_input_type
-import numpy as np
 from fingerprint_calculator import FingerprintCalculator
 
-def get_total_chunks(file_path, chunksize):
-    """ 
-    Calculate number of chunks based on self.chunksize for tqdm 
-    Maybe avoid for files that are too large >150 GB? Takes about ~2 minutes for such size
-    You can also just add manually the amount of lines to get an estimation
-    """
-    total_lines = sum(1 for _ in open(file_path)) - 1  # Subtract 1 for header
-    total_chunks = (int(total_lines) + int(chunksize) - 1) // int(chunksize)
-    return total_chunks
-    
 class DataHandler:
     def __init__(self, file_path, chunksize, smiles_col_index=0, header=0):
         self.file_path = file_path        
@@ -24,6 +13,16 @@ class DataHandler:
         self.smiles_col_index= smiles_col_index
         self.header = header
         self.datatype = find_input_type(file_path)
+    @staticmethod 
+    def get_total_chunks(self, file_path, chunksize):
+        """ 
+        Calculate number of chunks based on self.chunksize for tqdm 
+        Maybe avoid for files that are too large >150 GB? Takes about ~2 minutes for such size
+        You can also just add manually the amount of lines to get an estimation
+        """
+        total_lines = sum(1 for _ in open(file_path)) - 1  # Subtract 1 for header
+        total_chunks = (int(total_lines) + int(chunksize) - 1) // int(chunksize)
+        return total_chunks
 
     @staticmethod
     def get_total_lines(self):
@@ -34,7 +33,7 @@ class DataHandler:
     
     def load_data(self):
         """Returns correct generator to load data based on file input type"""
-        total_chunks = get_total_chunks(self.file_path, self.chunksize)
+        total_chunks = self.get_total_chunks(self.file_path, self.chunksize)
 
         # Dynamically dispatch the right method based on datatype
         if self.datatype == 'csv':
