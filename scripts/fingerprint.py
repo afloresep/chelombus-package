@@ -5,10 +5,10 @@ import logging
 import tqdm 
 import os
 from chelombus.data_handler import DataHandler
-from chelombus.utils.logging import setup_logging
+from chelombus.utils.log_setup import setup_logging
 from chelombus.utils.common_arg_parser import common_arg_parser
 from chelombus.utils.config_loader import load_config
-from chelombus.utils.helper_functions import process_input
+from chelombus.utils.helper_functions import process_input, ProgressTiming
 
 # Example usage in a CLI script
 def main() -> None:
@@ -46,20 +46,19 @@ def main() -> None:
     logging.info(f"Chunk size: {chunksize}")
     logging.info(f"Using {n_jobs} CPU cores")
 
-    start = time.time()
-    for file_path in process_input(input_path):
-        logging.info(f"Processing file: {file_path}")
-        # Process the file (e.g., calculate fingerprints)
-        data_handler = DataHandler(file_path, chunksize=chunksize)
-        data_chunks, total_chunks = data_handler.load_data()
+    with ProgressTiming(description='Fingerprints calculations', interval=30) as timer:
+        for file_path in process_input(input_path):
+            logging.info(f"Processing file: {file_path}")
+            # Process the file (e.g., calculate fingerprints)
+            data_handler = DataHandler(file_path, chunksize=chunksize)
+            data_chunks, total_chunks = data_handler.load_data()
 
-        start = time.time()
-        for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
-            data_handler.process_chunk(idx, chunk, output_dir)
-            del idx, chunk
-        end = time.time()
-
-        logging.info(f"Calculations for {file_path} took {int((end - start) // 3600)} hours, {int(((end - start) % 3600) // 60)} minutes, and {((end - start) % 60):.2f} seconds")
+            start = time.time()
+            for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
+                data_handler.process_chunk(idx, chunk, output_dir)
+                del idx, chunk
+            timer.log_progress() 
+            logging.info(f"Calculations for {file_path} took {int((end - start) // 3600)} hours, {int(((end - start) % 3600) // 60)} minutes, and {((end - start) % 60):.2f} seconds")
   
 
     # Process chunks with tqdm progress bar
