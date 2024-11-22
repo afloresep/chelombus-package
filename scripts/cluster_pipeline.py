@@ -1,13 +1,9 @@
 # File to run the Clustering pipeline
-
 import os
 import sys
 import time
 import logging 
 import argparse
-from pathlib import Path
-import numpy as np
-import joblib
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from sklearn.decomposition import IncrementalPCA
@@ -24,7 +20,6 @@ from chelombus.utils.config import (DATA_FILE_PATH, OUTPUT_FILE_PATH, CHUNKSIZE,
 from chelombus.data_handler import DataHandler
 from chelombus.fingerprint_calculator import FingerprintCalculator
 from chelombus.output_generator import OutputGenerator 
-from chelombus.dimensionality_reducer import DimensionalityReducer, get_percentiles
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Process fingerprints with flexible options.")
@@ -91,10 +86,10 @@ def main() -> None:
             fp_chunk_path = os.path.join(args.output_dir, f'batch_parquet/fingerprints_chunk_{idx}.parquet')
             df_fingerprints = pd.read_parquet(fp_chunk_path, engine="pyarrow")
         
-            data = df_fingerprints.drop(columns=['smiles']).values
-            ipca.partial_fit(data)
+            fingerprints_columns = df_fingerprints.drop(columns=['smiles']).values
+            ipca.partial_fit(fingerprints_columns)
 
-            del df_fingerprints, data
+            del df_fingerprints, fingerprints_columns 
             gc.collect()
 
         except Exception as e:
