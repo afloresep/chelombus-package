@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
-import pickle
 import os
 from typing import List, Tuple, Any, Optional
 from chelombus.utils.config import OUTPUT_FILE_PATH, CHUNKSIZE
+import logging
+logger = logging.getLogger(__name__)
 
 class OutputGenerator:
     def __init__(self):
@@ -28,7 +29,6 @@ class OutputGenerator:
         batch_idx: int,
         coordinates: np.ndarray,
         smiles_list: List[str],
-        features: Any,
         output_dir: str
     ) -> None:
         """
@@ -61,7 +61,6 @@ class OutputGenerator:
         idx, 
         coordinates: np.ndarray,
         smiles_list: List[str],
-        features: Any,
         output_dir: str
     ) -> None:
         """
@@ -86,7 +85,7 @@ class OutputGenerator:
         
         # TODO: Add features to DataFrame using 'features' parameter if needed.
         if os.path.exists(parquet_path):
-            print(f"{parquet_path} exists, skipping...")
+            logger.info(f"{parquet_path} exists, skipping...")
         else:
             batch_data.to_parquet(parquet_path, engine="pyarrow")
 
@@ -96,7 +95,6 @@ class OutputGenerator:
         self,
         coordinates: np.ndarray,
         smiles_list: List[str],
-        features: Any,
         output_dir: str
     ) -> None:
         """
@@ -131,53 +129,3 @@ class OutputGenerator:
 
         concatenated_parquet.to_parquet(parquet_path, engine="pyarrow")
         del concatenated_parquet, batch_data
-
-    def _round_to_step(
-        self,
-        coordinate: float,
-        min_value: float,
-        max_value: float,
-        step_size: float
-    ) -> float:
-        """
-        Map the coordinate to its closest value in the steps.
-
-        :param coordinate: The coordinate value to round.
-        :param min_value: Minimum allowed value.
-        :param max_value: Maximum allowed value.
-        :param step_size: The size of each step.
-        :return: The rounded coordinate value.
-        """
-        if coordinate < min_value:
-            return min_value
-        elif coordinate > max_value:
-            return max_value
-        else:
-            return min_value + step_size * round((coordinate - min_value) / step_size)
-
-    def fit_coord_multidimensional(
-        self,
-        output: str,
-        percentiles: List[Tuple[float, float]]
-    ) -> None:
-        """
-        Generalize fit_coordinates to handle more than 3 dimensions.
-
-        :param output: The CSV file containing the PCA coordinates.
-        :param percentiles: A list of percentile ranges for each dimension.
-        """
-        if len(percentiles) != len(self.steps):
-            raise ValueError("Percentiles and steps must have the same number of dimensions")
-
-        df_output = pd.read_csv(os.path.join(OUTPUT_FILE_PATH, 'output', output))
-
-        for dim in range(len(percentiles)):
-            step = (percentiles[dim][1] - percentiles[dim][0]) / self.steps[dim]
-            pca_column = f'PCA_{dim + 1}'
-            # Apply rounding for each dimension
-            df_output[pca_column] = df_output[pca_column].apply(
-                lambda x: self._round_to_step(x, percentiles[dim][0], percentiles[dim][1], step)
-            )
-
-        output_path = os.path.join(OUTPUT_FILE_PATH, 'output', output)
-        df_output.to_csv(output_path, index=False)
