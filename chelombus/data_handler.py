@@ -2,9 +2,8 @@ import gc
 import logging
 import os 
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from utils.helper_functions import find_input_type
-from fingerprint_calculator import FingerprintCalculator
+from chelombus.utils.helper_functions import find_input_type
+from chelombus.fingerprint_calculator import FingerprintCalculator
 
 class DataHandler:
     def __init__(self, file_path, chunksize, smiles_col_index=0, header=0):
