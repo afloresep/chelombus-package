@@ -1,6 +1,6 @@
 import os
 import yaml
-from config import *
+from chelombus.utils.config import *
 
 def load_config(user_config_path=None):
     """
