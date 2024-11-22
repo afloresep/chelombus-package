@@ -1,16 +1,16 @@
 from multiprocessing import Pool
 from functools import partial
 from typing import Optional
-from config import N_JOBS
 from rdkit import Chem
 from mhfp.encoder import MHFPEncoder
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
 import numpy as np
-import tmap as tm
-import hashlib
 from mapchiral.mapchiral import encode as mapc_enc
 import numpy.typing as npt
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Define the fingerprint functions at the module level
 def calculate_mhfp_fp(smiles: str, permutations: int) -> np.array:
@@ -19,7 +19,7 @@ def calculate_mhfp_fp(smiles: str, permutations: int) -> np.array:
         encoder = MHFPEncoder(permutations)
         return np.array(encoder.encode(smiles))
     except Exception as e:
-        print(f"Error processing SMILES '{smiles}': {e}")
+        logger.error(f"Error processing SMILES '{smiles}': {e}")
         return None
 
 def calculate_mqn_fp(smiles: str) -> np.array:
@@ -28,7 +28,7 @@ def calculate_mqn_fp(smiles: str) -> np.array:
         fingerprint = rdMolDescriptors.MQNs_(Chem.MolFromSmiles(smiles))
         return np.array(fingerprint)
     except Exception as e:
-        print(f"Error processing SMILES '{smiles}': {e}")
+        logger.error(f"Error processing SMILES '{smiles}': {e}")
         return None
 
 def calculate_morgan_fp(smiles: str, radius: int, fp_size: int) -> np.array:
@@ -43,7 +43,7 @@ def calculate_morgan_fp(smiles: str, radius: int, fp_size: int) -> np.array:
         return np.array(morgan_fp)
 
     except Exception as e:
-        print(f"Error processing SMILES '{smiles}': {e}")
+        logger.error(f"Error processing SMILES '{smiles}': {e}")
         return None
 
 def calculate_mapc_fp(smiles: str, radius: int, fp_size: int) -> np.array:
@@ -62,7 +62,7 @@ def calculate_mapc_fp(smiles: str, radius: int, fp_size: int) -> np.array:
         return np.array(fingerprint)
 
     except Exception as e:
-        print(f"Error processing SMILES '{smiles}': {e}")
+        logging.error(f"Error processing SMILES '{smiles}': {e}")
         return None
 
 class FingerprintCalculator:
@@ -107,19 +107,5 @@ class FingerprintCalculator:
         # Use multiprocessing Pool to calculate fingerprints in parallel
         with Pool(processes=16) as pool:
             fingerprints = pool.map(func_to_apply, self.smiles_list)
-
+        logging.debug(f"Created fingerprints with shape {fingerprints.shape}")
         return np.array(fingerprints)
-
-"""
-Example of usage:
-# Initiate
-fp_calculator = FingerprintCalculator(your_dataframe['smiles'], 'mqn')
-# This will calculate the MQN fingerprints.
-
-fp_calculator = FingerprintCalculator(smiles_list, 'mhfp', permutations=1024)
-# This will calculate the MHFP with 1024 permutations (default is 512)
-
-# Calculate fingerprints
-fingerprints = fp_calculator.calculate_fingerprints()
-# Returns np.array with the fingerprint vectors of same length as smiles_list
-"""
