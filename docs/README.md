@@ -8,6 +8,7 @@
 4. [Usage](#usage)
    - [Command-Line Interface (CLI)](#command-line-interface-cli)
    - [Using the Python Package](#using-the-python-package)
+   - [Monitoring](#monitoring-utilities)
 5. [Configuration](#configuration)
 6. [Examples](#examples)
 7. [API Reference](#api-reference)
@@ -153,6 +154,10 @@ from dynamic_tmap.clustering import ClusterMethod
 smiles = ["CCO", "CCCC", "C1=CC=CC=C1"]
 fp_calculator = FingerprintCalculator(smiles, fingerprint_type="morgan", fp_size=1024)
 fingerprints = fp_calculator.calculate_fingerprints()
+
+### **Monitoring Utilities**
+Chelombus includes utilities that allows you to monitor the execution time and memory usage of specific parts of your code using classes like `TimeTracker`, `RAMTracker` or both `RAMAndTimeTracker`.
+
 
 ---
 
