@@ -8,7 +8,7 @@ from chelombus.data_handler import DataHandler
 from chelombus.utils.log_setup import setup_logging
 from chelombus.utils.common_arg_parser import common_arg_parser
 from chelombus.utils.config_loader import load_config
-from chelombus.utils.helper_functions import process_input, ProgressTiming
+from chelombus.utils.helper_functions import process_input, TimeTracker
 
 # Example usage in a CLI script
 def main() -> None:
