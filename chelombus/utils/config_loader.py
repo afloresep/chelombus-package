@@ -1,40 +1,39 @@
 import os
+from pydantic import BaseSettings, Field
 import yaml
 from chelombus.utils.config import *
+from typing import List
 
-def load_config(user_config_path=None):
-    """
-    Load and merge a user-provided configuration file with the default config.
-    """
-    # Start with the default config
-    config = {
-        "BASE_DIR": BASE_DIR,
-        "DATA_FILE_PATH": DATA_PATH,
-        "OUTPUT_FILE_PATH": OUTPUT_PATH,
-        "CHUNKSIZE": CHUNKSIZE,
-        "PCA_N_COMPONENTS": PCA_N_COMPONENTS,
-        "STEPS_LIST": BINS,
-        "N_JOBS": N_JOBS,
-        "RANDOM_STATE": RANDOM_STATE,
-        "TMAP_NAME": TMAP_NAME,
-        "PERMUTATIONS": PERMUTATIONS,
-        "TMAP_K": TMAP_K,
-        "TMAP_NODE_SIZE": TMAP_NODE_SIZE,
-        "TMAP_POINT_SCALE": TMAP_POINT_SCALE,
-        "LOG_FILE_PATH": LOG_FILE_PATH,
-        "LOGGING_LEVEL": LOGGING_LEVEL,
-        "LOGGING_FORMAT": LOGGING_FORMAT,
-    }
+# Pydantic class
+class Config(BaseSettings):
+   BASE_DIR: str = os.getcwd()
+   DATA_PATH: str = "data/" 
+   OUTPUT_PATH: str = "data/output/"
+   CHUNKSIZE: int = 100_000
+   PCA_N_COMPONENTS: int = 3 
+   STEPS_LIST: List[int] = [50, 50, 50]
+   N_JOBS: int = os.cpu_count()
+   RANDOM_STATE: int = 42
+   TMAP_NAME: str = "tmap"
+   PERMUTATIONS: int = 512
+   TMAP_K: int = 20 
+   TMAP_NODE_SIZE: int = 5
+   TMAP_POINT_SCALE: float = 1.0
+   LOG_FILE_PATH: str = "logs/app.log"
+   LOGGING_LEVEL: str = "INFO"
+   LOGGING_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+   
+   
+   class Config:
+    env_prefix = 'CHELOMBUS_' # ENV variables will have this prefix
+    case_sensitive = False
 
-    # Merge with the user-provided config if it exists
+def load_config(user_config_path=None) -> Config:
+    """
+    Load and merge configurations from defaults, a user-provided file, and evironment variables
+    """
     if user_config_path and os.path.exists(user_config_path):
-        with open(user_config_path, "r") as f:
-            user_config = yaml.safe_load(f)
-            config.update(user_config)
-
-    # Dynamically resolve paths relative to BASE_DIR
-    config["DATA_FILE_PATH"] = os.path.abspath(config["DATA_FILE_PATH"])
-    config["OUTPUT_FILE_PATH"] = os.path.abspath(config["OUTPUT_FILE_PATH"])
-    config["LOG_FILE_PATH"] = os.path.abspath(config["LOG_FILE_PATH"])
-
+        config = Config(_env_file=user_config_path)
+    else:
+        config = Config()
     return config
