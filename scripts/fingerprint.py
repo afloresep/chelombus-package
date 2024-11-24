@@ -46,7 +46,7 @@ def main() -> None:
     logging.info(f"Chunk size: {chunksize}")
     logging.info(f"Using {n_jobs} CPU cores")
 
-    with ProgressTiming(description='Fingerprints calculations', interval=30) as timer:
+    with TimeTracker(description='Fingerprints calculations'):
         for file_path in process_input(input_path):
             logging.info(f"Processing file: {file_path}")
             # Process the file (e.g., calculate fingerprints)
@@ -57,7 +57,6 @@ def main() -> None:
             for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
                 data_handler.process_chunk(idx, chunk, output_dir)
                 del idx, chunk
-            timer.log_progress() 
             logging.info(f"Calculations for {file_path} took {int((end - start) // 3600)} hours, {int(((end - start) % 3600) // 60)} minutes, and {((end - start) % 60):.2f} seconds")
   
 
