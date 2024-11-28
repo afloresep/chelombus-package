@@ -163,41 +163,73 @@ Chelombus includes utilities that allows you to monitor the execution time and m
 
 ## **5. Configuration**
 
-### **Default Configuration**
-
-The default configuration is defined in `config.py`. Below is an example `user_config.yml` file:
-
-```yaml
-DATA_FILE_PATH: "data/input.csv"
-OUTPUT_FILE_PATH: "results/"
-CHUNKSIZE: 100000
-PCA_N_COMPONENTS: 3
-STEPS_LIST: [50, 50, 50]
-LOGGING_LEVEL: "INFO"
-```
-
-`config_loader.py` in `utils/` dynamically load and merges a user-specified configuration with the defaults.
-
-You can update all scripts or modules that direclty import from config.py to instead use `load_config()`
+Chelombus provides flexible configuration management using `pydantic`, allowing users to customize default settings efficiently. The default configuration values are defined in the `Config` class, which inherits from `BaseSettings`. Below is a list of the default values:
 
 ```python
-from utils.config_loader import load_config
-
-# Load the configuration
-config = load_config("path/to/user_config.yml")
-
-# Example of usage
-output_path = config["OUTPUT_FILE_PATH"]
-chunksize = config["CHUNKSIZE"]
+BASE_DIR: str = os.getcwd()  # Base directory for project execution
+DATA_PATH: str = "data/"  # Path for input data
+OUTPUT_PATH: str = "data/output/"  # Path for output data
+CHUNKSIZE: int = 100_000  # Size of data chunks for memory-intensive operations
+IPCA_MODEL: str = None  # Path to a pre-trained IPCA model (if applicable)
+PCA_N_COMPONENTS: int = 3  # Number of principal components for dimensionality reduction
+STEPS_LIST: List[int] = [50, 50, 50]  # Number of buckets per PCA dimension
+N_JOBS: int = os.cpu_count()  # Number of CPU cores to utilize (defaults to all cores)
+RANDOM_STATE: int = 42  # Random seed for reproducibility
+TMAP_NAME: str = "tmap"  # Name prefix for generated t-maps
+PERMUTATIONS: int = 512  # Number of hashing permutations
+TMAP_K: int = 20  # Number of neighbors considered in t-map
+TMAP_NODE_SIZE: int = 5  # Size of nodes in the t-map visualization
+TMAP_POINT_SCALE: float = 1.0  # Scale factor for t-map points
+LOG_FILE_PATH: str = "logs/app.log"  # Log file path
+LOGGING_LEVEL: str = "INFO"  # Logging verbosity level
+LOGGING_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"  # Logging format
 ```
 
-### Run Scripts with Custom Config
+### **Modifying Configuration Values**
 
-One can also pass the path to the user config file via CLI:
+Chelombus allows users to customize the configuration in two ways:
 
-`python scripts/fingerprint.py --config user_config.yml`
+---
 
-> If no user config is provided, the defaults from `config.py`are used.
+#### **1. Changing Configuration Values via CLI**
+
+You can override specific default values directly from the command line using flags. For example, to set a custom output directory (`OUTPUT_PATH`), use the corresponding flag, such as `--output-dir`. Only the specified value will be updated; all other settings will retain their defaults.
+
+---
+
+#### **2. Changing Configuration Values via an `.env` File**
+
+Alternatively, you can use a configuration file by specifying its path with the `--config` flag. This allows you to define multiple settings in a single file instead of specifying each value via CLI flags.
+
+When using a configuration file:
+- The file should follow the `.env` format, which consists of key-value pairs.
+- Any settings missing from the file will default to the values defined in the `Config` class.
+- Use the same attribute names as in the `Config` class, prefixed with `CHELOMBUS_`.
+
+For example, a `.env` file named `user_config.env` might look like this:
+
+```env
+CHELOMBUS_DATA_PATH=data/input.csv
+CHELOMBUS_OUTPUT_PATH=results/
+CHELOMBUS_CHUNKSIZE=200000
+CHELOMBUS_PCA_N_COMPONENTS=5
+CHELOMBUS_STEPS_LIST=[100, 200, 300]
+CHELOMBUS_LOGGING_LEVEL=DEBUG
+```
+
+#### **Usage Example**
+
+To load the configuration file, pass it to the `--config` flag:
+
+```bash
+perform-pca --config user_config.env
+```
+
+---
+
+### **YAML Files and Compatibility**
+
+Currently, Chelombus supports `.env` files for configuration. YAML files are not natively supported by `pydantic`. If you prefer YAML, consider converting the file to an `.env` format.
 
 ---
 

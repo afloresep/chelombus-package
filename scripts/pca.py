@@ -34,9 +34,10 @@ def main() -> None:
 
    # Load configuration
    try:
+      logging.info(args.config)
       config = load_config(args.config)
    except ValidationError as e:
-      logging.error(f"COnfiguration error: {e}")
+      logging.error(f"Configuration error: {e}")
       sys.exit(1)
 
    # Override configuration with CLI args if provided
@@ -46,32 +47,29 @@ def main() -> None:
    "CHUNKSIZE":args.chunksize or config.CHUNKSIZE,
    "PCA_N_COMPONENTS": args.pca_components or config.PCA_N_COMPONENTS,
    "N_JOBS": args.n_jobs or config.N_JOBS,
+   "IPCA_MODEL": args.ipca_model or config.IPCA_MODEL
    }) 
 
    os.makedirs(config.OUTPUT_PATH, exist_ok=True)
 
    logging.info(f"Input path: {config.DATA_PATH}")
    logging.info(f"Output directory: {config.OUTPUT_PATH}")
+   logging.info(f"IPCA model: {config.IPCA_MODEL}")
    logging.info(f"Chunk size: {config.CHUNKSIZE}")
    logging.info(f"Using {config.N_JOBS} CPU cores")
    logging.info(f"Number of PCA Components: {config.PCA_N_COMPONENTS}")
 
    start = time.time()
 
-   if args.ipca_model != None:
-      try:
-         ipca = joblib.load(args.ipca_model)
-      except Exception as e:
-         logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
-         sys.exit(1)
-   else:
+   if config.IPCA_MODEL == None:
       ipca = IncrementalPCA(n_components=config.PCA_N_COMPONENTS) 
       for file_path in process_input(config.DATA_PATH):
+         logging.info(f"Loading {file_path}")
          # TODO: Think best way to solve when user has different col_index and wants to change it. 
          data_handler = DataHandler(file_path=file_path, chunksize=config.CHUNKSIZE, smiles_col_index=1, header=None) 
          output_gen = OutputGenerator()
 
-         total_chunks = data_handler.get_total_chunks()
+         total_chunks = data_handler.get_total_chunks(file_path=file_path, chunksize=config.CHUNKSIZE)
 
          start = time.time()
          for idx in tqdm(range(args.resume_chunk,total_chunks), desc="Loading Fingerprints and iPCA partial fitting"):
@@ -88,6 +86,13 @@ def main() -> None:
                logging.error(f"Error during PCA fitting for chunk {idx}: {e}", exc_info=True)
          end = time.time()
          logging.info(f"iPCA fitting done in {config.DATA_PATH} took {int((end - start) // 3600)} hours, {int(((end - start) % 3600) // 60)} minutes, and {((end - start) % 60):.2f} seconds")
+
+   else: 
+      try:
+         ipca = joblib.load(args.ipca_model)
+      except Exception as e:
+         logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
+         sys.exit(1)
 
    for file_path in process_input(config.DATA_PATH):
       data_handler = DataHandler(file_path=file_path, chunksize=config.CHUNKSIZE, smiles_col_index=1, header=None) # TODO: Think best way to solve when user has different col_index and wants to change it.

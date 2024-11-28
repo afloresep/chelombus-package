@@ -10,6 +10,7 @@ class Config(BaseSettings):
    DATA_PATH: str = "data/" 
    OUTPUT_PATH: str = "data/output/"
    CHUNKSIZE: int = 100_000
+   IPCA_MODEL: str = None
    PCA_N_COMPONENTS: int = 3 
    STEPS_LIST: List[int] = [50, 50, 50]
    N_JOBS: int = os.cpu_count()
@@ -32,6 +33,7 @@ def load_config(user_config_path=None) -> Config:
     """
     Load and merge configurations from defaults, a user-provided file, and evironment variables
     """
+    print(user_config_path)
     if user_config_path and os.path.exists(user_config_path):
         config = Config(_env_file=user_config_path)
     else:

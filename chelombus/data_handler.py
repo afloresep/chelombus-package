@@ -12,8 +12,9 @@ class DataHandler:
         self.smiles_col_index= smiles_col_index
         self.header = header
         self.datatype = find_input_type(file_path)
+
     @staticmethod 
-    def get_total_chunks(self, file_path, chunksize):
+    def get_total_chunks(file_path, chunksize):
         """ 
         Calculate number of chunks based on self.chunksize for tqdm 
         Maybe avoid for files that are too large >150 GB? Takes about ~2 minutes for such size
@@ -28,7 +29,6 @@ class DataHandler:
         """Calculate the total number of lines in the file."""
         with open(self.file_path, 'r', encoding='utf-8') as f:
             return sum(1 for _ in f)
-
     
     def load_data(self):
         """Returns correct generator to load data based on file input type"""
