@@ -10,8 +10,8 @@ import os
 from chelombus.utils.log_setup import setup_logging
 from chelombus.utils.common_arg_parser import common_arg_parser
 from chelombus.utils.config_loader import load_config
-from chelombus.utils.helper_functions import process_input, TimeTracker
-from chelombus.data_handler import DataHandler
+from chelombus.utils.helper_functions import process_input, TimeTracker, RAMAndTimeTracker, FileProgressTracker
+from chelombus.data_handler import DataHandler  
 from chelombus.output_generator import OutputGenerator
 from sklearn.decomposition import IncrementalPCA
 import gc
@@ -29,12 +29,12 @@ def main() -> None:
    parser.add_argument('--ipca-model', default=None, type=str, help='Load a PCA model using joblib to avoid the fitting and directly transform the result')
    args = parser.parse_args() 
 
+   start = time.time()
    #Set up logging
    setup_logging(args.log_level)
 
    # Load configuration
    try:
-      logging.info(args.config)
       config = load_config(args.config)
    except ValidationError as e:
       logging.error(f"Configuration error: {e}")
@@ -59,44 +59,32 @@ def main() -> None:
    logging.info(f"Using {config.N_JOBS} CPU cores")
    logging.info(f"Number of PCA Components: {config.PCA_N_COMPONENTS}")
 
-   start = time.time()
-
-   if config.IPCA_MODEL == None:
-      ipca = IncrementalPCA(n_components=config.PCA_N_COMPONENTS) 
-      for file_path in process_input(config.DATA_PATH):
-         logging.info(f"Loading {file_path}")
-         # TODO: Think best way to solve when user has different col_index and wants to change it. 
-         data_handler = DataHandler(file_path=file_path, chunksize=config.CHUNKSIZE, smiles_col_index=1, header=None) 
-         output_gen = OutputGenerator()
-
-         total_chunks = data_handler.get_total_chunks(file_path=file_path, chunksize=config.CHUNKSIZE)
-
-         start = time.time()
-         for idx in tqdm(range(args.resume_chunk,total_chunks), desc="Loading Fingerprints and iPCA partial fitting"):
+   with FileProgressTracker(description="Fitting", total_files=35) as tracker:
+      if config.IPCA_MODEL == None:
+         ipca = IncrementalPCA(n_components=config.PCA_N_COMPONENTS) 
+         for idx, file_path in enumerate(process_input(config.DATA_PATH)):
+            time.sleep(2)
+            # TODO: Think best way to solve when user has different col_index and wants to change it. 
             try:
-               fp_chunk_path = os.path.join(config.OUTPUT_PATH, f'batch_parquet/fingerprints_chunk_{idx}.parquet') 
-               df_fingerprints = pd.read_parquet(fp_chunk_path, engine="pyarrow")
-
+               df_fingerprints = pd.read_parquet(file_path, engine="pyarrow")
                fingerprints_columns = df_fingerprints.drop(columns=['smiles']).values
                ipca.partial_fit(fingerprints_columns)
 
                del df_fingerprints, fingerprints_columns
                gc.collect()
+               tracker.update_progress()
             except Exception as e: 
                logging.error(f"Error during PCA fitting for chunk {idx}: {e}", exc_info=True)
-         end = time.time()
-         logging.info(f"iPCA fitting done in {config.DATA_PATH} took {int((end - start) // 3600)} hours, {int(((end - start) % 3600) // 60)} minutes, and {((end - start) % 60):.2f} seconds")
 
-   else: 
-      try:
-         ipca = joblib.load(args.ipca_model)
-      except Exception as e:
-         logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
+      else: 
+         try:
+            ipca = joblib.load(args.ipca_model)
+         except Exception as e:
+            logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
          sys.exit(1)
 
    for file_path in process_input(config.DATA_PATH):
-      data_handler = DataHandler(file_path=file_path, chunksize=config.CHUNKSIZE, smiles_col_index=1, header=None) # TODO: Think best way to solve when user has different col_index and wants to change it.
-      total_chunks = data_handler.get_total_lines()
+      total_chunks = DataHandler.get_total_lines()
       start = time.time()
 
       for idx in tqdm(range(args.resume_chunk, total_chunks), desc='iPCA transform and saving results'):
@@ -108,7 +96,7 @@ def main() -> None:
             coordinates = ipca.transform(df_fingerprints.drop(columns=['smiles']).values)  # -> np.array shape (chunk_size, n_pca_comp)
 
             # Output coordinates into a parquet file.
-            output_gen.batch_to_multiple_parquet(idx, coordinates,df_fingerprints['smiles'].to_list(), features, config.OUTPUT_PATH)
+            OutputGenerator.batch_to_multiple_parquet(idx, coordinates,df_fingerprints['smiles'].to_list(), features, config.OUTPUT_PATH)
 
             # Free memory space
             del df_fingerprints, coordinates, features 
