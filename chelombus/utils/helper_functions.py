@@ -175,7 +175,6 @@ class FileProgressTracker:
 
     def __enter__(self):
         self.start_time = time.time()
-        self.logger.info(f"{self.description} started.")
         self._thread = threading.Thread(target=self._monitor)
         self._thread.start()
         return self
