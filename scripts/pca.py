@@ -88,7 +88,7 @@ def main() -> None:
             logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
             sys.exit(1)
 
-   with FileProgressTracker(description="Transforming and saving PCA results", total_files=len(os.listdir(config.DATA_PATH))) as tracker:
+   with FileProgressTracker(description="Transforming and saving PCA results", total_files=total_files) as tracker:
       for file_path in process_input(config.DATA_PATH):
          try:
             # Load fingerprint

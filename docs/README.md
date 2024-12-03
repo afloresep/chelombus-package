@@ -8,7 +8,8 @@
 4. [Usage](#usage)
    - [Command-Line Interface (CLI)](#command-line-interface-cli)
    - [Using the Python Package](#using-the-python-package)
-   - [Monitoring](#monitoring-utilities)
+   - [Monitoring Utilities](#monitoring-utilities)
+   - [CLI and API](#)
 5. [Configuration](#configuration)
 6. [Examples](#examples)
 7. [API Reference](#api-reference)
@@ -116,6 +117,13 @@ Another example, if our `input.txt` has no header and our smiles values are on c
 
  `data_handler = Chelombus.DataHanlder(file_path = 'my_path', chunksize=1e7,header=None, smiles_col_index=2)`
 
+
+### **Monitoring Utilities**
+Chelombus includes utilities that allows you to monitor the execution time and memory usage of specific parts of your code using classes like `TimeTracker`, `RAMTracker` or both `RAMAndTimeTracker`.
+<!-- TODO: COMPLETE  -->
+
+### **CLI and API Integration**
+**Chelombus** can be used through a **Command-Line Interface**, ideal for quick operations or automated workflows. 
 ### **Command-Line Interface (CLI)**
 
 The package provides CLI tools for key functionalities:
@@ -138,15 +146,16 @@ The package provides CLI tools for key functionalities:
   python scripts/clustering.py --input-dir pca_results/ --output-dir clusters/ --config user_config.yml
   ```
 
-### **Using the Python Package**
+The configuration (e.g. `input-path`, `output-dir`) can be passed as flags (_see `perform-pca --help` section for all the options available_) or through a configuration file provided by the user passing `--config my_config.env`
+For more information about this, read the [Configuration](#5-configuration) documentation
 
-You can import and use individual modules programmatically:
+Additionally, **chelombus** can also be used with a **Python API** to import into your Python scripts or projects, providing access to all functionality programmatically 
+ 
+Examples:
 
 ```python
 from dynamic_tmap.fingerprint_calculator import FingerprintCalculator
-```
-
-- from dynamic_tmap.dimensionality_reducer import DimensionalityReducer
+from dynamic_tmap.dimensionality_reducer import DimensionalityReducer
 from dynamic_tmap.clustering import ClusterMethod
 
 # Example: Fingerprint Calculation
@@ -154,10 +163,14 @@ from dynamic_tmap.clustering import ClusterMethod
 smiles = ["CCO", "CCCC", "C1=CC=CC=C1"]
 fp_calculator = FingerprintCalculator(smiles, fingerprint_type="morgan", fp_size=1024)
 fingerprints = fp_calculator.calculate_fingerprints()
+```
 
-### **Monitoring Utilities**
-Chelombus includes utilities that allows you to monitor the execution time and memory usage of specific parts of your code using classes like `TimeTracker`, `RAMTracker` or both `RAMAndTimeTracker`.
+```python
+from chelombus import pca
 
+results = pca.run("my_datafile", output_dir="myfolder/")
+print(results.summary())
+```
 
 ---
 
