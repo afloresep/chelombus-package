@@ -165,7 +165,7 @@ class FileProgressTracker:
                 loading_bar = self._update_loading_bar(self.current_file)
                 print(
                     f"\r{loading_bar} Elapsed time: {elapsed_time:.2f}s, "
-                    f"Current RAM: {ram_usage:.2f} MB, Peak RAM: {self.max_ram:.2f} MB",
+                    f"Current RAM: {ram_usage:.2f} GB, Peak RAM: {self.max_ram:.2f} GB",
                     end=""
                 )
             time.sleep(self.interval)
