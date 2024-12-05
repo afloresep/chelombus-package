@@ -360,9 +360,3 @@ logging.basicConfig(
 **4. _Will monitoring impact the performance of my code?_**
 
 Monitoring introduces minimal overhead, especially when the `interval` is set appropriately for long-running tasks. However, for extremely performance-sensitive applications, you may want to increase the `interval` or disable monitoring.
-
----
-
-## Conclusion
-
-The monitoring utilities provided in this package are powerful tools for tracking the performance of your code. By following the guidelines and examples in this documentation, you can effectively monitor execution time and memory usage, helping you optimize and debug your applications.
