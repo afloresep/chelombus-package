@@ -1,7 +1,7 @@
 import os
 from pydantic import BaseSettings, Field
 import yaml
-from chelombus.utils.config import *
+from api.utils.config import *
 from typing import List
 
 # Pydantic class

@@ -1,6 +1,6 @@
 import time
 import logging
-from chelombus.utils.helper_functions import RAMAndTimeTracker 
+from api.utils.helper_functions import RAMAndTimeTracker 
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

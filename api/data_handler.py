@@ -2,8 +2,8 @@ import gc
 import logging
 import os 
 import pandas as pd
-from chelombus.utils.helper_functions import find_input_type
-from chelombus.fingerprint_calculator import FingerprintCalculator
+from api.utils.helper_functions import find_input_type
+from api.fingerprint_calculator import FingerprintCalculator
 
 class DataHandler:
     def __init__(self, file_path, chunksize, smiles_col_index=0, header=0):

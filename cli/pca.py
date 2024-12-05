@@ -7,12 +7,12 @@ from pydantic import ValidationError
 import tqdm 
 import pandas as pd 
 import os
-from chelombus.utils.log_setup import setup_logging
-from chelombus.utils.common_arg_parser import common_arg_parser
-from chelombus.utils.config_loader import load_config
-from chelombus.utils.helper_functions import process_input, TimeTracker , RAMAndTimeTracker, FileProgressTracker
-from chelombus.data_handler import DataHandler  
-from chelombus.output_generator import OutputGenerator
+from api.utils.log_setup import setup_logging
+from api.utils.common_arg_parser import common_arg_parser
+from api.utils.config_loader import load_config
+from api.utils.helper_functions import process_input, TimeTracker , RAMAndTimeTracker, FileProgressTracker
+from api.data_handler import DataHandler  
+from api.output_generator import OutputGenerator
 from sklearn.decomposition import IncrementalPCA
 import gc
 

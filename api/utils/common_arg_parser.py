@@ -1,5 +1,5 @@
 import argparse
-from chelombus.utils.config import LOGGING_LEVEL, N_JOBS
+from api.utils.config import LOGGING_LEVEL, N_JOBS
 
 def common_arg_parser(description):
     parser = argparse.ArgumentParser(description=description)

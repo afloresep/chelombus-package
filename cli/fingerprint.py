@@ -6,11 +6,11 @@ from pydantic import ValidationError
 import tqdm 
 import pandas as pd 
 import os
-from chelombus.utils.log_setup import setup_logging
-from chelombus.utils.common_arg_parser import common_arg_parser
-from chelombus.utils.config_loader import load_config
-from chelombus.utils.helper_functions import process_input, TimeTracker , FileProgressTracker
-from chelombus.data_handler import DataHandler  
+from api.utils.log_setup import setup_logging
+from api.utils.common_arg_parser import common_arg_parser
+from api.utils.config_loader import load_config
+from api.utils.helper_functions import process_input, TimeTracker , FileProgressTracker
+from api.data_handler import DataHandler  
 
 def main() -> None:
    parser = common_arg_parser(description="Calculate iPCA from fingerprints")

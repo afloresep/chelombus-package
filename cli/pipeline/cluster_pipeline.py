@@ -15,11 +15,11 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import configurations and modules
-from chelombus.utils.config import (DATA_FILE_PATH, OUTPUT_FILE_PATH, CHUNKSIZE, PCA_N_COMPONENTS,
+from api.utils.config import (DATA_FILE_PATH, OUTPUT_FILE_PATH, CHUNKSIZE, PCA_N_COMPONENTS,
                     LOGGING_LEVEL, LOGGING_FORMAT, LOG_FILE_PATH, N_JOBS, STEPS_LIST)
-from chelombus.data_handler import DataHandler
-from chelombus.fingerprint_calculator import FingerprintCalculator
-from chelombus.output_generator import OutputGenerator 
+from api.data_handler import DataHandler
+from api.fingerprint_calculator import FingerprintCalculator
+from api.output_generator import OutputGenerator 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Process fingerprints with flexible options.")

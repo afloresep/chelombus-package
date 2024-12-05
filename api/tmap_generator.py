@@ -12,8 +12,8 @@ from typing import Optional
 from rdkit import Chem
 from rdkit.Chem import Descriptors, rdMolDescriptors
 from faerun import Faerun
-from chelombus.utils.config import OUTPUT_FILE_PATH, TMAP_NAME, TMAP_NODE_SIZE, TMAP_K, TMAP_POINT_SCALE
-from chelombus.fingerprint_calculator import FingerprintCalculator
+from api.utils.config import OUTPUT_FILE_PATH, TMAP_NAME, TMAP_NODE_SIZE, TMAP_K, TMAP_POINT_SCALE
+from api.fingerprint_calculator import FingerprintCalculator
 import tmap as tm
 import logging
 
