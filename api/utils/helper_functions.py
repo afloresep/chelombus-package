@@ -20,6 +20,11 @@ def find_input_type(file_path):
       else: 
             raise ValueError('Unsupported input file. Only .csv, .txt. and .cxsmiles files are supported')
 
+def format_time(seconds):
+        hours, rem = divmod(seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
+        return f"{int(hours)} h; {int(minutes)}m; {seconds:.2f}s"
+
 def process_input(input_path):
     if os.path.isdir(input_path):
         # Process all files in the directory
@@ -47,13 +52,7 @@ class TimeTracker:
         self.end_time = time.time()
         self.elapsed_time = self.end_time - self.start_time
         self.logger.info(f"{self.description} completed.")
-        self.logger.info(f"Total time elapsed: {self.format_time(self.elapsed_time)}")
-
-    @staticmethod
-    def format_time(seconds):
-        hours, rem = divmod(seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-        return f"{int(hours)} hours, {int(minutes)} minutes, {seconds:.2f} seconds"
+        self.logger.info(f"Total time elapsed: {format_time(self.elapsed_time)}")
 
 class RAMTracker:
     def __init__(self, description="", interval=1.0, logger=None):
@@ -121,17 +120,10 @@ class RAMAndTimeTracker:
         end_time = time.time()
         elapsed_time = end_time - self.start_time
         self.logger.info(f"{self.description} completed.")
-        self.logger.info(f"Total time elapsed: {self.format_time(elapsed_time)}")
+        self.logger.info(f"Total time elapsed: {format_time(elapsed_time)}")
         self.logger.info(f"Peak RAM usage: {self.max_ram:.2f} MB")
         if self.display_progress:
             print()  # Move to the next line after the progress output
-
-    @staticmethod
-    def format_time(seconds):
-        hours, rem = divmod(seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-        return f"{int(hours)} hours, {int(minutes)} minutes, {seconds:.2f} seconds"
-
 
 class FileProgressTracker:
     def __init__(self, description="", total_files=1, interval=1.0, logger=None, display_progress=True):
@@ -159,14 +151,21 @@ class FileProgressTracker:
             current_time = time.time()
             elapsed_time = current_time - self.start_time
             ram_usage = self.process.memory_info().rss / (1024 ** 3) # Convert to GB
-            if ram_usage > self.max_ram:
-                self.max_ram = ram_usage
+            total_mem = psutil.virtual_memory()
+            system_ram = f"Mem: {total_mem.used / (1024 ** 3):.1f}G/{total_mem.total / (1024 ** 3):.1f}G"
+            if total_mem.used> self.max_ram:
+                # self.max_ram = ram_usage
+                self.max_ram = total_mem.used
             if self.display_progress:
                 loading_bar = self._update_loading_bar(self.current_file)
                 print(
-                    f"\r{loading_bar} Elapsed time: {elapsed_time:.2f}s, "
-                    f"Current RAM: {ram_usage:.2f} GB, Peak RAM: {self.max_ram:.2f} GB",
-                    end=""
+                f"\r{loading_bar} Time: {format_time(elapsed_time)}, "
+                f"Peak RAM: {self.max_ram / (1024 ** 3):.1f} GB, {system_ram}",
+                end=""
+                # print(
+                #     f"\r{loading_bar} Elapsed time: {self.format_time(elapsed_time)}, "
+                #     f"Current RAM: {ram_usage:.2f} GB, Peak RAM: {self.max_ram:.2f} GB",
+                #     end=""
                 )
             time.sleep(self.interval)
 
@@ -185,14 +184,7 @@ class FileProgressTracker:
         end_time = time.time()
         elapsed_time = end_time - self.start_time
         self.logger.info(f"{self.description} completed.")
-        self.logger.info(f"Total time elapsed: {self.format_time(elapsed_time)}")
+        self.logger.info(f"Total time elapsed: {format_time(elapsed_time)}")
         self.logger.info(f"Peak RAM usage: {self.max_ram:.2f} MB")
         if self.display_progress:
             print()  # Move to the next line after the progress output
-
-    @staticmethod
-    def format_time(seconds):
-        hours, rem = divmod(seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-        return f"{int(hours)} hours, {int(minutes)} minutes, {seconds:.2f} seconds"
-
