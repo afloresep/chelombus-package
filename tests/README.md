@@ -11,8 +11,6 @@ Time taken for uncompressed file: 3.78 seconds
 ```
 *Output test for main.py with compressed vs uncompressed file:*
 
-
-
 ## Chunk Size test
 
 ## 10M compound dataset
