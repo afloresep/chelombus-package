@@ -4,7 +4,6 @@ import time
 import logging 
 from pydantic import ValidationError
 import tqdm 
-import pandas as pd 
 import os
 from api.utils.log_setup import setup_logging
 from api.utils.common_arg_parser import common_arg_parser
