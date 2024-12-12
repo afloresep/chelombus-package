@@ -10,6 +10,8 @@ class Config(BaseSettings):
    DATA_PATH: str = "data/" 
    OUTPUT_PATH: str = "data/output/"
    CHUNKSIZE: int = 100_000
+   TDIGEST_MODEL: str = None
+   SAVE_TDIGEST_MODEL: bool = True
    IPCA_MODEL: str = None
    PCA_N_COMPONENTS: int = 3 
    STEPS_LIST: List[int] = [50, 50, 50]
