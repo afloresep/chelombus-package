@@ -126,9 +126,9 @@ class RAMAndTimeTracker:
             print()  # Move to the next line after the progress output
 
 class ProgressTracker:
-    def __init__(self, description="", total_files=1, interval=1.0, logger=None, display_progress=True):
+    def __init__(self, description="", total_steps=1, interval=1.0, logger=None, display_progress=True):
         self.description = description
-        self.total_files = total_files
+        self.total_steps= total_steps
         self.interval = interval
         self.process = psutil.Process()
         self._stop_event = threading.Event()
@@ -141,10 +141,10 @@ class ProgressTracker:
 
     def _update_loading_bar(self, current):
         bar_length = 30
-        filled_length = int(round(bar_length * current / float(self.total_files)))
-        percents = round(100.0 * current / float(self.total_files), 1)
+        filled_length = int(round(bar_length * current / float(self.total_steps)))
+        percents = round(100.0 * current / float(self.total_steps), 1)
         bar = '#' * filled_length + '>' + '-' * (bar_length - filled_length)
-        return f"{self.description}: |{bar}| {current}/{self.total_files} ({percents}%)"
+        return f"{self.description}: |{bar}| {current}/{self.total_steps} ({percents}%)"
 
     def _monitor(self):
         while not self._stop_event.is_set():
