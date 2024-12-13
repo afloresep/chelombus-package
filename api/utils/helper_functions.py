@@ -125,7 +125,7 @@ class RAMAndTimeTracker:
         if self.display_progress:
             print()  # Move to the next line after the progress output
 
-class FileProgressTracker:
+class ProgressTracker:
     def __init__(self, description="", total_files=1, interval=1.0, logger=None, display_progress=True):
         self.description = description
         self.total_files = total_files
@@ -162,10 +162,6 @@ class FileProgressTracker:
                 f"\r{loading_bar} Time: {format_time(elapsed_time)}, "
                 f"Peak RAM: {self.max_ram / (1024 ** 3):.1f} GB, {system_ram}",
                 end=""
-                # print(
-                #     f"\r{loading_bar} Elapsed time: {self.format_time(elapsed_time)}, "
-                #     f"Current RAM: {ram_usage:.2f} GB, Peak RAM: {self.max_ram:.2f} GB",
-                #     end=""
                 )
             time.sleep(self.interval)
 
