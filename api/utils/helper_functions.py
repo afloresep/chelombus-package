@@ -12,18 +12,20 @@ logger = logging.getLogger(__file__)
 
 def find_input_type(file_path):
       if file_path.endswith('csv'):
-            return 'csv'
+        return 'csv'
       elif file_path.endswith('txt'):
-            return 'txt'
+        return 'txt'
       elif file_path.endswith('cxsmiles'):
-            return 'cxsmiles'
+        return 'cxsmiles'
+      elif file_path.endswith('parquet'):
+        return 'parquet'
       else: 
-            raise ValueError('Unsupported input file. Only .csv, .txt. and .cxsmiles files are supported')
+        raise ValueError('Unsupported input file. Only .csv, .txt. .parquet and .cxsmiles files are supported')
 
 def format_time(seconds):
-        hours, rem = divmod(seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-        return f"{int(hours)} h; {int(minutes)}m; {seconds:.2f}s"
+    hours, rem = divmod(seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return f"{int(hours)} h; {int(minutes)}m; {seconds:.2f}s"
 
 def process_input(input_path):
     if os.path.isdir(input_path):
