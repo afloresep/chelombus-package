@@ -10,6 +10,7 @@ class Config(BaseSettings):
    DATA_PATH: str = "data/" 
    OUTPUT_PATH: str = "data/output/"
    CHUNKSIZE: int = 100_000
+   TMP_FOLDER: str = os.path.join(OUTPUT_PATH, "tmp")
    TDIGEST_MODEL: str = None
    SAVE_TDIGEST_MODEL: bool = True
    IPCA_MODEL: str = None

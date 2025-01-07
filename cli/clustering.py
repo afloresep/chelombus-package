@@ -111,7 +111,7 @@ def main() -> None:
         window_pca3 = Window.partitionBy("bin_PCA2").orderBy("PCA_3")
         bucket_dataframe = bucket_dataframe.withColumn("bin_PCA3", ntile(first_dim_step).over(window_pca3) - 1)
 
-        # Convert bin_PCA2 and bin_PCA3 to integer type if necessary
+        # Convert bin_PCA2 and bin_PCA3 to integer type 
         bucket_dataframe = bucket_dataframe.withColumn("bin_PCA2", col("bin_PCA2").cast("int"))
         bucket_dataframe = bucket_dataframe.withColumn("bin_PCA3", col("bin_PCA3").cast("int"))
 
