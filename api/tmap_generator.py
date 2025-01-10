@@ -12,7 +12,7 @@ from typing import Optional
 from rdkit import Chem
 from rdkit.Chem import Descriptors, rdMolDescriptors
 from faerun import Faerun
-from api.utils.config import OUTPUT_FILE_PATH, TMAP_NAME, TMAP_NODE_SIZE, TMAP_K, TMAP_POINT_SCALE
+from api.utils.config import OUTPUT_PATH,TMAP_NAME, TMAP_NODE_SIZE, TMAP_K, TMAP_POINT_SCALE
 from api.fingerprint_calculator import FingerprintCalculator
 import tmap as tm
 import logging
@@ -91,7 +91,7 @@ class TmapConstructor:
 class TmapGenerator:
     def __init__(
             self,
-            df_path: pd.DataFrame,  
+            df_path: str,  
             fingerprint_type: str = 'morgan', 
             permutations: Optional[int]= 512, 
             output_name: str = TMAP_NAME,
@@ -120,11 +120,10 @@ class TmapGenerator:
         self.tmap_name = TMAP_NAME
         # Initialize helper classes
         self.fingerprint_calculator = FingerprintCalculator(self.dataframe['smiles'], self.fingerprint_type, permutations=self.permutations, fp_size=self.fp_size)
-        self.plotter = Plotter(self.output_name, self.categ_cols)
         self.tmap_constructor = TmapConstructor(self.dataframe)
 
         #TODO: Is this necessary? I could just create a new instance of the class and treat as just any other TMAP passing 'cluster_id' as label'
-        self.representatives_dataframe_file_path = os.path.join(OUTPUT_FILE_PATH, 'cluster_representatives.csv')
+        self.representatives_dataframe_file_path = os.path.join(OUTPUT_PATH, 'cluster_representatives.csv')
         self._representatives_dataframe = pd.read_csv(self.representatives_dataframe_file_path)
         
 
