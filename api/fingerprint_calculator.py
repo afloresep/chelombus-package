@@ -107,5 +107,4 @@ class FingerprintCalculator:
         # Use multiprocessing Pool to calculate fingerprints in parallel
         with Pool(processes=16) as pool:
             fingerprints = pool.map(func_to_apply, self.smiles_list)
-        logging.debug(f"Created fingerprints with shape {fingerprints.shape}")
         return np.array(fingerprints)
