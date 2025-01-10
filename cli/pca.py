@@ -9,7 +9,7 @@ import os
 from api.utils.log_setup import setup_logging
 from api.utils.common_arg_parser import common_arg_parser
 from api.utils.config_loader import load_config
-from api.utils.helper_functions import process_input, TimeTracker , FileProgressTracker
+from api.utils.helper_functions import process_input, TimeTracker , ProgressTracker
 from api.output_generator import OutputGenerator
 from sklearn.decomposition import IncrementalPCA
 import gc
@@ -63,7 +63,7 @@ def main() -> None:
    else:
       total_files = 1 
 
-   with FileProgressTracker(description="Fitting", total_files=total_files) as tracker:
+   with ProgressTracker(description="Fitting", total_files=total_files) as tracker:
       if config.IPCA_MODEL == None:
          ipca = IncrementalPCA(n_components=config.PCA_N_COMPONENTS) 
          for idx, file_path in enumerate(process_input(config.DATA_PATH)):
@@ -86,7 +86,7 @@ def main() -> None:
             logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
             sys.exit(1)
 
-   with FileProgressTracker(description="Transforming and saving PCA results", total_files=total_files) as tracker:
+   with ProgressTracker(description="Transforming and saving PCA results", total_files=total_files) as tracker:
       for file_path in process_input(config.DATA_PATH):
          try:
             # Load fingerprint
