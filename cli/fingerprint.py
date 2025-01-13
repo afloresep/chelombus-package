@@ -8,11 +8,11 @@ import os
 from api.utils.log_setup import setup_logging
 from api.utils.common_arg_parser import common_arg_parser
 from api.utils.config_loader import load_config
-from api.utils.helper_functions import process_input, TimeTracker , FileProgressTracker
+from api.utils.helper_functions import process_input, TimeTracker , ProgressTracker
 from api.data_handler import DataHandler  
 
 def main() -> None:
-   parser = common_arg_parser(description="Calculate iPCA from fingerprints")
+   parser = common_arg_parser(description="Calculate fingerprints from SMILES")
    parser.add_argument('--data-path', help="Input data file or directory.")
    parser.add_argument('--output-path', help="Directory to save fingerprints.")
    parser.add_argument("--chunksize", type=int, help="Override config chunksize.")
@@ -53,7 +53,7 @@ def main() -> None:
    else:
       total_files = 1 
 
-   with FileProgressTracker(description="Calculating Fingerprints", total_files=total_files) as tracker:
+   with ProgressTracker(description="Calculating Fingerprints", total_files=total_files) as tracker:
     for file_path in process_input(config.DATA_PATH):
         data_handler = DataHandler(file_path, chunksize=config.CHUNKSIZE)
         data_chunks, total_chunks= data_handler.load_data()
