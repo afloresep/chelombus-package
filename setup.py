@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'calculate-fingerprints=scripts.fingerprint:main',
+            'calculate-fingerprints=cli.fingerprint:main',
             'perform-pca=scripts.pca:main',
             'run-clustering=scripts.clustering:main',
         ],
