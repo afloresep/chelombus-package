@@ -3,12 +3,12 @@ import sys
 import time
 import logging 
 from pydantic import ValidationError
-import tqdm 
+from tqdm import tqdm 
 import os
 from api.utils.log_setup import setup_logging
 from api.utils.common_arg_parser import common_arg_parser
 from api.utils.config_loader import load_config
-from api.utils.helper_functions import process_input, TimeTracker , ProgressTracker
+from api.utils.helper_functions import process_input, format_time, TimeTracker , ProgressTracker
 from api.data_handler import DataHandler  
 
 def main() -> None:
@@ -17,7 +17,6 @@ def main() -> None:
    parser.add_argument('--output-path', help="Directory to save fingerprints.")
    parser.add_argument("--chunksize", type=int, help="Override config chunksize.")
    parser.add_argument('--resume-chunk', type=int, default=0, help="Resume from a specific chunk.")
-   parser.add_argument('--n-jobs', type=int, help='Number of CPU cores to be used. Default uses all available CPU cores')
    args = parser.parse_args() 
 
    start = time.time()
@@ -53,7 +52,7 @@ def main() -> None:
    else:
       total_files = 1 
 
-   with ProgressTracker(description="Calculating Fingerprints", total_files=total_files) as tracker:
+   with ProgressTracker(description="Calculating Fingerprints", total_steps=total_files) as tracker:
     for file_path in process_input(config.DATA_PATH):
         data_handler = DataHandler(file_path, chunksize=config.CHUNKSIZE)
         data_chunks, total_chunks= data_handler.load_data()
@@ -63,4 +62,5 @@ def main() -> None:
             del idx, chunk
         tracker.update_progress()
    end = time.time()
-   logging.info(f"Fingerprint calculation for {config.DATA_PATH} took: {TimeTracker.format_time(end -start)}")
+   logging.info(f"Fingerprint calculation for {config.DATA_PATH} took: {format_time(end -start)}")
+   
