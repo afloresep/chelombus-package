@@ -183,6 +183,6 @@ class ProgressTracker:
         elapsed_time = end_time - self.start_time
         self.logger.info(f"{self.description} completed.")
         self.logger.info(f"Total time elapsed: {format_time(elapsed_time)}")
-        self.logger.info(f"Peak RAM usage: {self.max_ram:.2f} MB")
+        self.logger.info(f"Peak RAM usage: {(self.max_ram)/1000000000} GB")
         if self.display_progress:
             print()  # Move to the next line after the progress output
