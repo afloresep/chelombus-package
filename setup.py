@@ -10,7 +10,7 @@ setup(
     entry_points={
         'console_scripts': [
             'calculate-fingerprints=cli.fingerprint:main',
-            'perform-pca=scripts.pca:main',
+            'perform-pca=cli.pca:main',
             'run-clustering=scripts.clustering:main',
         ],
     },
