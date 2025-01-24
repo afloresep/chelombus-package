@@ -27,18 +27,34 @@ def format_time(seconds):
     minutes, seconds = divmod(rem, 60)
     return f"{int(hours)} h; {int(minutes)}m; {seconds:.2f}s"
 
-def process_input(input_path):
-    if os.path.isdir(input_path):
-        # Process all files in the directory
-        for file in os.listdir(input_path):
-            file_path = os.path.join(input_path, file)
-            if os.path.isfile(file_path):  # Optional: filter by file extensions
-                yield file_path
-    elif os.path.isfile(input_path):
-        # Process a single file
-        yield input_path
-    else:
-        raise ValueError(f"Invalid input path: {input_path}")
+def process_input(input_paths):
+    """
+    ----------
+    input_paths : str, list, or tuple
+        A single file path, a folder path, or a list of file and/or folder paths.
+        Folders will be traversed to yield file paths contained within.    Yields:
+    -------
+    str
+        File paths from the provided input(s).
+    """
+    if isinstance(input_paths, str):
+        # Single path (file or folder)
+        input_paths = [input_paths]
+    elif not isinstance(input_paths, (list, tuple)):
+        raise ValueError(f"Invalid input type: {type(input_paths)}. Provide a string, list, or tuple.")    
+
+    for input_path in input_paths:
+        if os.path.isdir(input_path):
+            # Process all files in the directory
+            for file in os.listdir(input_path):
+                file_path = os.path.join(input_path, file)
+                if os.path.isfile(file_path):  # Optional: filter by file extensions
+                    yield file_path
+        elif os.path.isfile(input_path):
+            # Process a single file
+            yield input_path
+        else:
+            raise ValueError(f"Invalid input path: {input_path}. Ensure the path exists and is a valid file or directory.")
 
 class TimeTracker:
     def __init__(self, description="", logger=None):
