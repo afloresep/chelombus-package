@@ -24,6 +24,7 @@ def main() -> None:
    parser.add_argument('--smiles-col-idx', type=int, help='Column index for the smiles values in the input data. Default is first column (0)')
    parser.add_argument('--resume-chunk', type=int, default=0, help="Resume from a specific chunk.")
    parser.add_argument('--ipca-model', default=None, type=str, help='Load a PCA model using joblib to avoid the fitting and directly transform the result')
+   parser.add_argument('--save-model', default=False, type=str, help='Save the iPCA model after fitting. Default is False')
    parser.add_argument('--remove', default=False, type=bool, help='Remove fingerprints files after PCA reduction')
    args = parser.parse_args() 
 
@@ -63,7 +64,7 @@ def main() -> None:
    else:
       total_files = 1 
 
-   with ProgressTracker(description="Fitting", total_files=total_files) as tracker:
+   with ProgressTracker(description="Fitting", total_steps=total_files) as tracker:
       if config.IPCA_MODEL == None:
          ipca = IncrementalPCA(n_components=config.PCA_N_COMPONENTS) 
          for idx, file_path in enumerate(process_input(config.DATA_PATH)):
@@ -78,7 +79,9 @@ def main() -> None:
                tracker.update_progress()
             except Exception as e: 
                logging.error(f"Error during PCA fitting for chunk {idx}: {e}", exc_info=True)
-
+         if args.save_model: 
+            joblib.dump(ipca, os.path.join('/home/afloresep/work/chelombus-package/data/testing', 'ipca-model.joblib'))
+            logging.info("Model saved")
       else: 
          try:
             ipca = joblib.load(args.ipca_model)
@@ -86,7 +89,7 @@ def main() -> None:
             logging.error(f"iPCA model {args.ipca_model} could not be loaded. Error {e}") 
             sys.exit(1)
 
-   with ProgressTracker(description="Transforming and saving PCA results", total_files=total_files) as tracker:
+   with ProgressTracker(description="Transforming and saving PCA results", total_steps=total_files) as tracker:
       for file_path in process_input(config.DATA_PATH):
          try:
             # Load fingerprint
