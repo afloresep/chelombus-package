@@ -60,6 +60,7 @@ class OutputGenerator:
         idx, 
         coordinates: np.ndarray,
         smiles_list: List[str],
+        features, 
         output_dir: str
     ) -> None:
         """
