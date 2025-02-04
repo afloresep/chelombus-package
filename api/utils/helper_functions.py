@@ -5,10 +5,34 @@ import threading
 import logging
 import time
 import logging
+import api.fingerprint_calculator as fp_calc
 
 # Create logger 
 logger = logging.getLogger(__name__)
 logger = logging.getLogger(__file__)
+
+def return_fingerprint_method(fingerprint:str):
+        """
+        Function to return the correct fingerprint calculation method
+        based on the fingerprint provided
+        
+        :param fingerprint: name of the fingerprint to be
+        :return method: fingerprint calculation method
+
+        Example usage:
+        fp_calculator = return_fingerprint_method('mqn')
+        my_fp = fp_calculator(smiles='CCO')
+        """
+        if fingerprint=='mhfp':
+           return  fp_calc.calculate_mhfp_fp
+        elif fingerprint=='morgan':
+           return fp_calc.calculate_morgan_fp 
+        elif fingerprint=='mapc':
+            return fp_calc.calculate_mapc_fp
+        elif fingerprint=='mqn':
+            return fp_calc.calculate_mqn_fp
+        else:
+            raise ValueError("Fingerprint method not valid. Only {mhfp, morgan, mapc, mqn}")
 
 def find_input_type(file_path):
       if file_path.endswith('csv'):
