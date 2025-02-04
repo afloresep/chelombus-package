@@ -141,7 +141,7 @@ class DataHandler:
             ##########################
             # chunk has a smiles column? 
             try:
-                smiles_list = chunk['smiles']
+                smiles_list = chunk['nonisomeric_smiles']
             except:
                 smiles_list = chunk
 
@@ -184,7 +184,7 @@ class DataHandler:
             os.makedirs(os.path.join(output_dir, 'output'), exist_ok=True)
 
             # Save to parquet dataframe
-            chunk_dataframe.to_csv(fp_chunk_path, index=False)
+            chunk_dataframe.to_parquet(fp_chunk_path, index=False)
 
             del chunk_dataframe, smiles_dataframe, smiles_list
             del fingerprint_df  
