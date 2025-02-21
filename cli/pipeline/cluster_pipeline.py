@@ -9,109 +9,117 @@ from sklearn.decomposition import IncrementalPCA
 import gc
 import pandas as pd
 
+# CLI for fingerprint calculation on billions of molecules
+import sys
+import time
+import logging 
+from pydantic import ValidationError
+from tqdm import tqdm 
+import os
+from api.utils.log_setup import setup_logging
+from api.utils.common_arg_parser import common_arg_parser
+from api.utils.config_loader import load_config
+from api.utils.helper_functions import process_input, format_time, TimeTracker , ProgressTracker
+from api.data_handler import DataHandler  
+
 # Append the parent directory to sys.path to import modules from src
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import configurations and modules
-from api.utils.config import (DATA_FILE_PATH, OUTPUT_FILE_PATH, CHUNKSIZE, PCA_N_COMPONENTS,
-                    LOGGING_LEVEL, LOGGING_FORMAT, LOG_FILE_PATH, N_JOBS, STEPS_LIST)
 from api.data_handler import DataHandler
 from api.fingerprint_calculator import FingerprintCalculator
 from api.output_generator import OutputGenerator 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Process fingerprints with flexible options.")
-    
-    # Optional arguments to override config settings
-    parser.add_argument('--data-file', type=str, default=DATA_FILE_PATH, help="Input data file path.")
-    parser.add_argument('--output-dir', type=str, default=OUTPUT_FILE_PATH, help="Output data directory.")
-    parser.add_argument('--chunksize', type=int, default=CHUNKSIZE, help="Chunk size for loading data.")
-    parser.add_argument('--pca-components', type=int, default=PCA_N_COMPONENTS, help="Number of PCA components.")
-    parser.add_argument('--log-level', type=str, default=LOGGING_LEVEL,
-                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Logging verbosity level.")
-    parser.add_argument('--n-jobs', type=int, default=N_JOBS, help="Number of CPU cores to use.")
-    parser.add_argument('--resume', type=int, default=0, help="Resume from a specific chunk.")
-    parser.add_argument('--log', type=bool, default=False, help="Saving logs to output.log file. Default False")
-    return parser.parse_args()
-
-def setup_logging(log_level, log_output):
-    if log_output == True:
-
-        logging.basicConfig(level=getattr(logging, log_level.upper()), format=LOGGING_FORMAT, filename=LOG_FILE_PATH) # saving logs to file
-    
-    else: 
-        logging.basicConfig(level=getattr(logging, log_level.upper()), format=LOGGING_FORMAT, stream=sys.stderr)  # Direct logs to stderr (console)
-    
-    logging.info("Logging initialized")
-
 
 def main() -> None:
-    args = parse_arguments()
+   parser = common_arg_parser(description="Calculate fingerprints from SMILES")
+   parser.add_argument('--data-path', help="Input data file or directory.")
+   parser.add_argument('--output-path', help="Directory to save fingerprints.")
+   parser.add_argument("--chunksize", type=int, help="Override config chunksize.")
+   parser.add_argument("--n_components", type=int, help="Number of PCA components to reduce to")
+   parser.add_argument('--resume-chunk', type=int, default=0, help="Resume from a specific chunk.")
+   args = parser.parse_args() 
 
-    # Set up logging based on the parsed arguments or config defaults
-    setup_logging(args.log_level, args.log)
-    
-    logging.info(f"Processing file: {args.data_file}")
-    logging.info(f"Output directory: {args.output_dir}")
-    logging.info(f"Chunk size: {args.chunksize}")
-    logging.info(f"Number of PCA components: {args.pca_components}")
-    logging.info(f"Using {args.n_jobs} CPU cores")
-    
-    assert args.pca_components == len(STEPS_LIST), "STEPS_LIST should be same lenght as number of PCA_COMPONENTS" 
+   start = time.time()
+   
+   #Set up logging
+   setup_logging(args.log_level)
 
-    # Initialize classes
-    data_handler = DataHandler(args.data_file, args.chunksize)
-    output_gen = OutputGenerator()
+   # Load configuration
+   try:
+      config = load_config(args.config)
+   except ValidationError as e:
+      logging.error(f"Configuration error: {e}")
+      sys.exit(1)
+
+   # Override configuration with CLI args if provided
+   config = config.copy(update={
+   "DATA_PATH":args.data_path or config.DATA_PATH,
+   "OUTPUT_PATH":args.output_path or config.OUTPUT_PATH,
+   "CHUNKSIZE":args.chunksize or config.CHUNKSIZE,
+   "N_JOBS": args.n_jobs or config.N_JOBS,
+   "PCA_N_COMPONENTS": args.n_components or config.PCA_N_COMPONENTS
+   }) 
+
+   os.makedirs(config.OUTPUT_PATH, exist_ok=True)
+
+   logging.info(f"Input path: {config.DATA_PATH}")
+   logging.info(f"Output directory: {config.OUTPUT_PATH}")
+   logging.info(f"Chunksize: {config.CHUNKSIZE}")
+   logging.info(f"Using {config.N_JOBS} CPU cores")
+
+   # Initialize classes
+   data_handler = DataHandler(config.DATA_PATH, config.CHUNKSIZE)
+   output_gen = OutputGenerator()
        
-    # Load data in chunks
-    data_chunks, total_chunks = data_handler.load_data()
+   # Load data in chunks
+   data_chunks, total_chunks = data_handler.load_data()
 
-    # Process chunks with tqdm progress bar
-    start = time.time()
+   # Process chunks with tqdm progress bar
+   start = time.time()
 
-    for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
-        data_handler.process_chunk(idx, chunk, args.output_dir)
-        del idx, chunk
+   for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
+       data_handler.process_chunk(idx, chunk, config.OUTPUT_PATH)
+       del idx, chunk
 
-    end = time.time()    
-    logging.info(f"Preprocessing of data took: {(end - start)/59:.2f} minutes")
- 
-    ipca = IncrementalPCA(n_components=args.pca_components)  # Dimensions to reduce to
+   end = time.time()    
+   logging.info(f"Preprocessing of data took: {(end - start)/59:.2f} minutes")
 
-    # Incremental PCA fitting
-    for idx in tqdm(range(args.resume, total_chunks), desc="Loading Fingerprints and iPCA partial fitting"):
-        try:
-            fp_chunk_path = os.path.join(args.output_dir, f'batch_parquet/fingerprints_chunk_{idx}.parquet')
-            df_fingerprints = pd.read_parquet(fp_chunk_path, engine="pyarrow")
-        
-            fingerprints_columns = df_fingerprints.drop(columns=['smiles']).values
-            ipca.partial_fit(fingerprints_columns)
+   ipca = IncrementalPCA(n_components=config.PCA_N_COMPONENTS)  # Dimensions to reduce to
 
-            del df_fingerprints, fingerprints_columns 
-            gc.collect()
+   # Incremental PCA fitting
+   for idx in tqdm(range(total_chunks), desc="Loading Fingerprints and iPCA partial fitting"):
+       try:
+           fp_chunk_path = os.path.join(config.OUTPUT_PATH, f'batch_parquet/fingerprints_chunk_{idx}.parquet')
+           df_fingerprints = pd.read_parquet(fp_chunk_path, engine="pyarrow")
+       
+           fingerprints_columns = df_fingerprints.drop(columns=['smiles']).values
+           ipca.partial_fit(fingerprints_columns)
 
-        except Exception as e:
-            logging.error(f"Error during PCA fitting for chunk {idx}: {e}", exc_info=True)
+           del df_fingerprints, fingerprints_columns 
+           gc.collect()
 
-    for idx in tqdm(range(args.resume, total_chunks), desc='iPCA transform and saving results'):
-         try:
-             # Load fingerprint
-             fp_chunk_path = os.path.join(args.output_dir, f'batch_parquet/fingerprints_chunk_{idx}.parquet')
-             df_fingerprints  =  pd.read_parquet(fp_chunk_path)
-             features = []
-             coordinates = ipca.transform(df_fingerprints.drop(columns=['smiles']).values)  # -> np.array shape (chunk_size, n_pca_comp)
+       except Exception as e:
+           logging.error(f"Error during PCA fitting for chunk {idx}: {e}", exc_info=True)
 
-            # Output coordinates into a parquet file.
-             output_gen.batch_to_multiple_parquet(idx, coordinates,df_fingerprints['smiles'].to_list(), features, args.output_dir)
+   for idx in tqdm(range(total_chunks), desc='iPCA transform and saving results'):
+           try:
+               # Load fingerprint
+               fp_chunk_path = os.path.join(config.OUTPUT_PATH, f'batch_parquet/fingerprints_chunk_{idx}.parquet')
+               df_fingerprints  =  pd.read_parquet(fp_chunk_path)
+               features = []
+               coordinates = ipca.transform(df_fingerprints.drop(columns=['smiles']).values)  # -> np.array shape (chunk_size, n_pca_comp)
 
-             # Free memory space
-             del df_fingerprints, coordinates, features 
-             # os.remove(fp_chunk_path) 
+           # Output coordinates into a parquet file.
+               output_gen.batch_to_multiple_parquet(idx, coordinates,df_fingerprints['smiles'].to_list(), features, config.OUTPUT_PATH)
 
-         except Exception as e:
-             logging.error(f"Error during data transformation for chunk {idx}: {e}", exc_info=True)
+               # Free memory space
+               del df_fingerprints, coordinates, features 
+               # os.remove(fp_chunk_path) 
 
-        
+           except Exception as e:
+               logging.error(f"Error during data transformation for chunk {idx}: {e}", exc_info=True)
+
+           
 if __name__ == '__main__':
     start_time = time.time()
     # Run the main function
