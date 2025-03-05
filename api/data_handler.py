@@ -59,7 +59,8 @@ class DataHandler:
         Maybe avoid for files that are too large >150 GB? Takes about ~2 minutes for such size
         You can also just add manually the amount of lines to get an estimation
         """
-        total_lines = sum(1 for _ in open(file_path)) - 1  # Subtract 1 for header
+        # total_lines = sum(1 for _ in open(file_path)) - 1  # Subtract 1 for header
+        total_lines = 955_000_000
         total_chunks = (int(total_lines) + int(chunksize) - 1) // int(chunksize)
         return total_chunks
 
@@ -129,11 +130,18 @@ class DataHandler:
         """
         Process a single chunk of data by calculating fingerprints and saving them to a parquet file
         """
+
+        # The name of the input file should be added as prefix to the batch output path so there's no 
+        # collision in the naming with other files used as input as well
+
+        filename = self.file_path.split('/')[-1].split('.')[0] # From '/path/path2/my_filename.txt' To 'my_filename'
+
+        # Create a folder to save the fingerprints 
+
         try:
-            # Check if chunk already exists
-            fp_chunk_path = os.path.join(output_dir, f'batch_parquet/fingerprints_chunk_{idx}.parquet')
+            fp_chunk_path = os.path.join(output_dir, f'{filename}_fp_chunk_{idx}.parquet')
             if os.path.exists(fp_chunk_path):
-                logging.info(f'Chunk {idx} already processed, skipping.')
+                # logging.info(f'Chunk {idx} already processed, skipping.')
                 return            
             
             ##########################
@@ -141,7 +149,7 @@ class DataHandler:
             ##########################
             # chunk has a smiles column? 
             try:
-                smiles_list = chunk['nonisomeric_smiles']
+                smiles_list = chunk['smiles']
             except:
                 smiles_list = chunk
 
@@ -178,10 +186,6 @@ class DataHandler:
             else:
                 # Concatenate SMILES + fingerprints
                 chunk_dataframe = pd.concat([smiles_dataframe, fingerprint_df ], axis=1)
-
-            # Ensure output directories exist
-            os.makedirs(os.path.join(output_dir, 'batch_parquet'), exist_ok=True)
-            os.makedirs(os.path.join(output_dir, 'output'), exist_ok=True)
 
             # Save to parquet dataframe
             chunk_dataframe.to_parquet(fp_chunk_path, index=False)
