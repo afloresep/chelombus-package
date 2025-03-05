@@ -44,7 +44,7 @@ def find_input_type(file_path):
       elif file_path.endswith('parquet'):
         return 'parquet'
       else: 
-        raise ValueError('Unsupported input file. Only .csv, .txt. .parquet and .cxsmiles files are supported')
+        logging.error('Unsupported input file. Only .csv, .txt. .parquet and .cxsmiles files are supported')
 
 def format_time(seconds):
     hours, rem = divmod(seconds, 3600)
@@ -53,7 +53,8 @@ def format_time(seconds):
 
 def process_input(input_paths):
     """
-    ----------
+    Method to deal with input paths for files and folders. 
+    Yields files if tuple or list of paths are provided
     input_paths : str, list, or tuple
         A single file path, a folder path, or a list of file and/or folder paths.
         Folders will be traversed to yield file paths contained within.    Yields:
@@ -65,7 +66,7 @@ def process_input(input_paths):
         # Single path (file or folder)
         input_paths = [input_paths]
     elif not isinstance(input_paths, (list, tuple)):
-        raise ValueError(f"Invalid input type: {type(input_paths)}. Provide a string, list, or tuple.")    
+        logging.error(f"Invalid input type: {type(input_paths)}. Provide a string, list, or tuple. Skipping")
 
     for input_path in input_paths:
         if os.path.isdir(input_path):
