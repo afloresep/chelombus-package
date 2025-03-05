@@ -57,10 +57,9 @@ class OutputGenerator:
 
     def batch_to_multiple_parquet(
         self,
-        idx, 
+        file_name, 
         coordinates: np.ndarray,
         smiles_list: List[str],
-        features, 
         output_dir: str
     ) -> None:
         """
@@ -71,8 +70,7 @@ class OutputGenerator:
         :param features: Additional features (type unspecified).
         :param output_dir: Directory to save the output files.
         """
-        os.makedirs(os.path.join(output_dir, 'output'), exist_ok=True)
-        parquet_path = os.path.join(output_dir, 'output', f'output_dataframe_{idx}.parquet')
+        parquet_path = os.path.join(output_dir , f'pca_vectors_{file_name}.parquet')
 
         # Create DataFrame for the current batch
         batch_data = pd.DataFrame({'smiles': smiles_list})
