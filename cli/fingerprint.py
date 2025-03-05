@@ -46,21 +46,21 @@ def main() -> None:
    logging.info(f"Chunksize: {config.CHUNKSIZE}")
    logging.info(f"Using {config.N_JOBS} CPU cores")
 
-   # This is just to ensure that in case a file is provided as input instead of a folder, Progress bar also works
-   if os.path.isdir(config.DATA_PATH):
-      total_files = len(os.listdir(config.DATA_PATH))
-   else:
-      total_files = 1 
 
-   with ProgressTracker(description="Calculating Fingerprints", total_steps=total_files) as tracker:
-    for file_path in process_input(config.DATA_PATH):
-        data_handler = DataHandler(file_path, chunksize=config.CHUNKSIZE)
-        data_chunks, total_chunks= data_handler.load_data()
-
-        for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
-            data_handler.process_chunk(idx, chunk, config.OUTPUT_PATH)
-            del idx, chunk
-        tracker.update_progress()
+   for file_path in process_input(config.DATA_PATH):
+      logging.info("Processing: ", file_path)
+      data_handler = DataHandler(file_path, chunksize=config.CHUNKSIZE,smiles_col_index=1)
+      try:
+         data_chunks, total_chunks= data_handler.load_data()
+      except Exception as e:
+         logging.error(f"Exception ocurred when processing {file_path}, raised {e}")
+         break
+      for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints")):
+         data_handler.process_chunk(idx, chunk, config.OUTPUT_PATH)
+         del idx, chunk
    end = time.time()
    logging.info(f"Fingerprint calculation for {config.DATA_PATH} took: {format_time(end -start)}")
    
+
+if __name__=="__main__":
+   main()
