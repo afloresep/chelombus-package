@@ -7,7 +7,7 @@ from typing import List
 # Pydantic class
 class Config(BaseSettings):
    BASE_DIR: str = os.getcwd()
-   DATA_PATH: str = "data/" 
+   DATA_PATH: str = "data/" # This can be a folder with input files or just an input file
    OUTPUT_PATH: str = "data/output/"
    CHUNKSIZE: int = 100_000
    TMP_FOLDER: str = os.path.join(OUTPUT_PATH, "tmp")
@@ -26,7 +26,7 @@ class Config(BaseSettings):
    LOG_FILE_PATH: str = "logs/app.log"
    LOGGING_LEVEL: str = "INFO"
    LOGGING_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-   
+   SMILES_COL_IDX: int = 0
    
    class Config:
     env_prefix = 'CHELOMBUS_' # ENV variables will have this prefix
