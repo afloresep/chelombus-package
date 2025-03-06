@@ -95,12 +95,8 @@ def main() -> None:
       except Exception as e:
          logging.error(f"Exception ocurred when processing {file_path}, raised {e}")
          break
-      for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks,
-                                       desc=f"Loading chunk and calculating its fingerprints",
-                                        unit= "chunk")):
+      for idx, chunk in enumerate(tqdm(data_chunks, total= total_chunks, desc=f"Loading chunk and calculating its fingerprints", unit= "chunk")):
          data_handler.process_chunk(idx, chunk, fp_folder_path)
-         if idx == 10:
-             break
          del idx, chunk
    end = time.time()
    logging.info(f"Fingerprint calculation for {config.DATA_PATH} took: {format_time(end -start)}")
