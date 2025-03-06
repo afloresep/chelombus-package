@@ -183,6 +183,7 @@ class DataHandler:
             if descriptors:
                 # Concatenate all of them: SMILES + fingerprints + descriptors
                 chunk_dataframe = pd.concat([smiles_dataframe, fingerprint_df, descriptors_df], axis=1)
+                del descriptors_df
             else:
                 # Concatenate SMILES + fingerprints
                 chunk_dataframe = pd.concat([smiles_dataframe, fingerprint_df ], axis=1)
