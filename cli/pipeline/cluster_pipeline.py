@@ -78,7 +78,7 @@ def main() -> None:
    start = time.time()
    
    #########################################################
-   #  FINGERPRINT CALCULATIONS
+   #                 FINGERPRINT CALCULATIONS              # 
    #########################################################
 
    # Within the output path we create a folder to store the fingerprints
@@ -103,7 +103,7 @@ def main() -> None:
 
 
    #########################################################
-   # iPCA FITTING 
+   #                   iPCA FITTING                         #
    #########################################################
    # First check whether there's a iPCA model passed -to not have to fit again-
    if config.IPCA_MODEL == None:
@@ -142,16 +142,16 @@ def main() -> None:
            sys.exit(1)
 
    #########################################################
-   # iPCA TRANSFORM (FINGERPRINT VECTOR-> PCA VECTOR) 
+   #    iPCA TRANSFORM (FINGERPRINT VECTOR-> PCA VECTOR)   # 
    #########################################################
 
    # Same as for fingerprints. Create a separated folder in config.OUTPUT_PATH
-   # to store the output parquet files of 3D PCA valuesH
+   # to store the output parquet files of 3D PCA values
 
    pca_vectors_folder_path = os.path.join(config.OUTPUT_PATH, 'pca_vectors')
    os.makedirs(pca_vectors_folder_path, exist_ok=True)
 
-   for file_path in tqdm(os.listdir(fp_folder_path),desc="Trasnforming FP into 3D vectors"):
+   for file_path in tqdm(os.listdir(fp_folder_path),desc="Transforming FP into 3D vectors"):
             try:
                 file_name = file_path.split('.')[0]
                 fp_chunk_path = os.path.join(fp_folder_path, file_path)
@@ -177,9 +177,9 @@ if __name__ == '__main__':
     main()
     # Manually invoke garbage collection
     gc.collect()
-    # Clear all modules (optional but useful for memory cleanup)
+    # Clear all modules 
     sys.modules.clear()
     # Clear any cached variables or objects
     del main
     end_time = time.time()
-    logging.info(f"Total execution time: {(end_time - start_time)/60:.2f} minutes")
+    logging.info(f"Total execution time: {format_time(end_time - start_time)}")
