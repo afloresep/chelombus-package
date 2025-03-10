@@ -141,8 +141,8 @@ class DataHandler:
         try:
             fp_chunk_path = os.path.join(output_dir, f'{filename}_fp_chunk_{idx}.parquet')
             if os.path.exists(fp_chunk_path):
-                # logging.info(f'Chunk {idx} already processed, skipping.')
-                return            
+                logging.info(f'Chunk {idx} already processed, skipping.')
+                return
             
             ##########################
             # Calculate fingerprints
