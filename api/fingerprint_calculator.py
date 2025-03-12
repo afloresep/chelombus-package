@@ -20,7 +20,7 @@ def calculate_mhfp_fp(smiles: str, permutations: int) -> np.array:
         return np.array(encoder.encode(smiles))
     except Exception as e:
         logger.error(f"Error processing SMILES '{smiles}': {e}")
-        return None
+        return [np.nan for i in range(42)] #In case error processed, return valid 42 dim vector
 
 def calculate_mqn_fp(smiles: str) -> np.array:
     """Calculate MQN fingerprint for a single SMILES string."""
