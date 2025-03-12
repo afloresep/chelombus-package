@@ -166,10 +166,13 @@ def main() -> None:
                 del df_fingerprints, coordinates
                 gc.collect()
 
+                #Remove the fingerprint if indicated
+                if args.remove == True: 
+                    os.remove(fp_chunk_path)
+
             except Exception as e:
                 logging.error(f"Error during PCA fitting for chunk {fp_chunk_path}: {e}", exc_info=True)
 
-               # os.remove(fp_chunk_path) 
 
 if __name__ == '__main__':
     start_time = time.time()
