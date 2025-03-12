@@ -42,6 +42,7 @@ import os
 import numpy as np
 import dask.dataframe as dd
 import dask.array as da
+import logging 
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -77,6 +78,12 @@ def parse_args():
         "--parquet_compression",
         default="snappy",
         help="Parquet compression codec (default: snappy)."
+    )
+    parser.add_argument(
+    "--verbosity",
+    type=int,
+    default=0,
+    help="Set verbosity level (0 for no logging, >0 for info logging)"
     )
     return parser.parse_args()
 
@@ -137,45 +144,32 @@ def assign_cluster_ids(part, col, percentiles, new_col='cluster_id_new'):
     return part
 
 
-def update_cumulative_cluster_id(part, new_col, cluster_col, n_bins):
-    """
-    Update the running cluster_id by combining it with a newly assigned cluster ID.
-
-    cluster_id = (old_cluster_id * n_bins) + new_cluster_id
-
-    If there is no old_cluster_id, assume it's zero (fresh start).
-    """
-    # If the old cluster_id column is missing, treat the old cluster_id as 0
-    if cluster_col not in part.columns:
-        part[cluster_col] = 0
-
-    old_cluster_id = part[cluster_col].values
-    new_cluster_id = part[new_col].values
-
-    # Combine them into a single integer
-    combined = old_cluster_id * n_bins + new_cluster_id
-    part[cluster_col] = combined
-    return part
-
 
 def main():
+    import time 
+
+    start = time.time()
     args = parse_args()
+
+    # Configure logging: if verbosity > 0, show INFO messages; otherwise, only show WARNING and above.
+    logging.basicConfig(level=logging.INFO if args.verbosity > 0 else logging.WARNING,
+                        format='%(message)s')
 
     # Prepare quantiles for n_bins. Example: n_bins=50 => step=2 => [0, 2, 4, ..., 98, 100]
     step_size = 100 / args.n_bins if args.n_bins else 100
     quantiles_range = np.arange(0, 100 + step_size, step_size)
 
     # 1) Read the subtable
-    print(f"[INFO] Reading input from {args.input_path}")
+    logging.info(f"Reading input from {args.input_path}")
     df = dd.read_parquet(args.input_path)
 
     # 2) Compute percentiles for the chosen column
-    print(f"[INFO] Computing percentiles for column '{args.col}'...")
+    logging.info(f"Computing percentiles for column '{args.col}'...")
     percentiles = compute_percentiles(df, args.col, quantiles_range)
-    print(f"[INFO] Percentile boundaries completed")
+    logging.info("Percentile boundaries completed")
 
     # 3) Assign new cluster IDs for this level
-    print(f"[INFO] Assigning new cluster IDs in column '{args.new_cluster_col}'...")
+    logging.info(f"Assigning new cluster IDs in column '{args.new_cluster_col}'...")
     df = df.map_partitions(
         assign_cluster_ids,
         col=args.col,
@@ -183,35 +177,68 @@ def main():
         new_col=args.new_cluster_col
     )
 
-    # 4) Update the cumulative cluster_id
-    #    cluster_id = (old_cluster_id * n_bins) + new_cluster_id
-    print(f"[INFO] Updating cumulative cluster ID '{args.cluster_id_col}'...")
-    # If this is the first split, we don't have cumulative cluster_id columns so we skip
-    if args.cluster_id_col is not None:
-        df = df.map_partitions(
-            update_cumulative_cluster_id,
-            new_col=args.new_cluster_col,
-            cluster_col=args.cluster_id_col,
-            n_bins=args.n_bins
-        )
-    # 5) Write out partitioned Parquet, partitioned by the final cluster_id
-    #    (or you can partition by the newly created cluster_id_3 if you prefer.)
     os.makedirs(args.output_path, exist_ok=True)
-    print(f"[INFO] Writing output to {args.output_path}, partitioned by '{args.new_cluster_col}'...")
-    print(df.columns)
+
+
+    """
+    This script has to be generalizable to the clustering in all columns. For the first
+    dimensions (PCA_1, PCA_2) we need to save the files using partition_on=[args.new_cluster_id]`.
+    The reason is that dask will save the files based on the new_cluster_id, facilitating us to then use 
+    a bash script to repeat the process for every partition (i.e. subtable). 
+
+    For example, on the first run -clustering of PCA_1- args.new_cluster_id == cluster_id_1 so when we save using
+    partition_on = 'cluster_id_1' and if we assume n_bins = 50 the directories will be saved like this:
+    output_path/'cluster_pca_1_id=N_BIN'/
+    So basically the name of the directory (metadata) is the each of the values that cluster_id_1 can take
+    (50 different in this case). 
+    Inside 'cluster_id_1=0' we will find the subtable of the original dataframe where cluster_id_1 = 0. 
+    For clustering this again, -this time for PCA_2 column and new_cluster_id = cluster_id_2, 
+    we can run a bash script with something like
+    
+    ```bash
+    
+    for i in {0..49}; do
+        python clustering_dask_recursive.py --input_path /output_path/'cluster_pca_1_id=$i' --col PCA_2 --new_cluster_col cluster_id_2 --n_bins 50 --output_path output_path_2
+        echo "Completed iteration $i"
+     done
+   ```
+    """  
+    if args.new_cluster_col == 'cluster_id_3':
+        # This is the final step, thus we need to create the cluster_id
+        # based on the results from previous cluster_id_1/2  
+        df = df.astype({
+            'cluster_id_1': 'int64',
+            'cluster_id_2': 'int64',
+            'cluster_id_3': 'int64'
+        })
+        # Ensure the computed cluster_id is also int64
+        df['cluster_id'] = (df['cluster_id_1'] * (50 * 50) + df['cluster_id_2'] * 50 + df['cluster_id_3']).astype('int64') 
+
+        # At this point, df has a single column 'cluster_id' representing the unique cluster index across all 3 levels.
+        df = df.drop(columns=['cluster_id_1', 'cluster_id_2', 'cluster_id_3'])
+
+        # Check correct columns
+        logging.info(df.columns)
+        # Now we don't need to partition based on column `parition_on=[args.new_cluster_col]`
+        # So we can just partition the data as we need and save it
+        df = df.repartition(npartitions=200)
+        logging.info(f"[INFO] Writing output to {args.output_path}, partitioned by '{args.new_cluster_col}'...")
+        df.to_parquet(args.output_path, engine='pyarrow', write_index=False)
+
+        logging.info("[INFO] Clustering + ID update complete!")
+        return 
+
+    # Save as Parquet files
+    logging.info(f"[INFO] Writing output to {args.output_path}, partitioned by '{args.new_cluster_col}'...")
+    logging.info(df.columns)
     df.to_parquet(
         args.output_path,
         partition_on=str(args.new_cluster_col),
        compression=args.parquet_compression
     )
 
-    print("[INFO] Clustering + ID update complete!")
-
-
+    end = time.time()
+    logging.info("Time took " + str(end-start))
 
 if __name__ == "__main__":
-    import time
-    s = time.time()
     main()
-    e = time.time()
-    print("Time took", (e-s))
